@@ -25,7 +25,7 @@ services:
     volumes:
       # Uncomment if you want to use named volume
       - postgres_data:/var/lib/postgresql/data
-      - /home/adrian-pc/Repo/docker/weight-tracker/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ${REPO_PATH}:/docker-entrypoint-initdb.d/init.sql
 
 volumes:
   postgres_data:

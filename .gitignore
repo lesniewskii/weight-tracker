@@ -1,3 +1,4 @@
 #ignore all envs
 *.env
 #ignore all logs
+*.logs

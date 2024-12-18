@@ -24,6 +24,8 @@ CREATE TABLE weight_measurements (
 );
 
 -- Insert sample data
-INSERT INTO users (name) VALUES ('John Doe');
+INSERT INTO users (name) VALUES ('Adrian');
 INSERT INTO weight_measurements (user_id, measurement_date, weight, notes) 
-VALUES (1, '2024-11-11', 70.5, 'Morning weight');
+VALUES (1, '2024-12-06', 92.10, 'Poranna Waga');
+
+

@@ -1,5 +1,7 @@
 fastapi
+starlette
 asyncpg
 pydantic
 uvicorn
 python-dotenv
+prometheus-client

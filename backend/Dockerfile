@@ -6,6 +6,7 @@ WORKDIR /app
 
 # Install dependencies
 COPY requirements.txt .
+RUN pip install --no-cache-dir prometheus_client
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the FastAPI app into the container

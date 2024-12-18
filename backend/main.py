@@ -1,11 +1,31 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from datetime import datetime
 from asyncpg import create_pool
+from starlette.responses import Response
 import os
+import logging
+
+# REQUEST_COUNT = Counter(
+#     "http_requests_total", 
+#     "Total number of HTTP requests",
+#     ["method", "endpoint", "http_status"]
+# )
+
+# REQUEST_LATENCY = Histogram(
+#     "http_request_latency_seconds", 
+#     "Latency of HTTP requests in seconds",
+#     ["method", "endpoint"]
+# )
 
 app = FastAPI()
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO
+)
 
 # Database connection settings
 DB_HOST = os.getenv("DB_HOST", "localhost")
@@ -14,10 +34,19 @@ DB_USER = os.getenv("DB_USER", "myuser")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "mypassword")
 DB_PORT = os.getenv("DB_PORT", "5432")
 
+
+# CORS settings
+origins = [
+    "http://localhost",  # Allow frontend if running locally
+    "http://localhost:3000",  # React app port (if locally running)
+    "http://10.42.0.240:80",  # If using LoadBalancer, replace with actual IP
+    "*",  # Or use "*" to allow all origins (not recommended for production)
+]
+
 # CORS settings: Allow React app to access the API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React dev server origin
+    allow_origins=[origins],  # React dev server origin
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -45,6 +74,11 @@ class Measurement(BaseModel):
     weight: float
     notes: str = ""
 
+
+@app.get("/")
+def read_root():
+    return {"message": "Hello, World!!!"}
+
 # Endpoint: Get all measurements
 @app.get("/measurements")
 async def get_measurements():
@@ -61,7 +95,36 @@ async def get_measurements():
          "weight": row["weight"], "notes": row["notes"]} 
         for row in rows
     ]
+
+    
+    logger.info(f"Fetched measurements: {measurements}")
+        # return jsonify(measurements)
     return {"measurements": measurements}
+
+
+# @app.middleware("http")
+# async def add_prometheus_metrics(request: Request, call_next):
+#     start_time = time.time()
+#     response = await call_next(request)
+#     process_time = time.time() - start_time
+
+#     # Record metrics
+#     REQUEST_COUNT.labels(
+#         method=request.method, 
+#         endpoint=request.url.path, 
+#         http_status=response.status_code
+#     ).inc()
+#     REQUEST_LATENCY.labels(
+#         method=request.method, 
+#         endpoint=request.url.path
+#     ).observe(process_time)
+
+#     return response
+
+# Expose metrics endpoint
+# @app.get("/metrics")
+# def get_metrics():
+#     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 # Endpoint: Add a new measurement
 @app.post("/measurements")
@@ -84,5 +147,7 @@ async def add_measurement(measurement: Measurement):
             )
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error adding measurement: {e}")
+
+    logger.info(f"Fetched measurements: {insert_query}")
 
     return {"message": "Measurement added successfully"}

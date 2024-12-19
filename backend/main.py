@@ -46,7 +46,7 @@ origins = [
 # CORS settings: Allow React app to access the API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[origins],  # React dev server origin
+    allow_origins=origins,  # Directly pass the list of origins
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

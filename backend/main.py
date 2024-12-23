@@ -1,20 +1,21 @@
+import os
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from datetime import datetime
 from asyncpg import create_pool
-from starlette.responses import Response
-import os
+from fastapi.responses import JSONResponse
+
 import logging
 
 # REQUEST_COUNT = Counter(
-#     "http_requests_total", 
+#     "http_requests_total",
 #     "Total number of HTTP requests",
 #     ["method", "endpoint", "http_status"]
 # )
 
 # REQUEST_LATENCY = Histogram(
-#     "http_request_latency_seconds", 
+#     "http_request_latency_seconds",
 #     "Latency of HTTP requests in seconds",
 #     ["method", "endpoint"]
 # )
@@ -23,8 +24,7 @@ app = FastAPI()
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    level=logging.INFO
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
 
 # Database connection settings
@@ -52,20 +52,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # Initialize the database connection pool
 @app.on_event("startup")
 async def startup():
     app.state.db_pool = await create_pool(
-        host=DB_HOST, 
-        database=DB_NAME, 
-        user=DB_USER, 
-        password=DB_PASSWORD, 
-        port=DB_PORT
+        host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASSWORD, port=DB_PORT
     )
+
 
 @app.on_event("shutdown")
 async def shutdown():
     await app.state.db_pool.close()
+
 
 # Pydantic model for adding a measurement
 class Measurement(BaseModel):
@@ -79,6 +78,14 @@ class Measurement(BaseModel):
 def read_root():
     return {"message": "Hello, World!!!"}
 
+
+@app.get(
+    "/health", summary="Health Check", response_description="Application Health Status"
+)
+async def health_check():
+    return JSONResponse(content={"status": "healthy"}, status_code=200)
+
+
 # Endpoint: Get all measurements
 @app.get("/measurements")
 async def get_measurements():
@@ -91,14 +98,17 @@ async def get_measurements():
     async with app.state.db_pool.acquire() as connection:
         rows = await connection.fetch(query)
     measurements = [
-        {"name": row["name"], "measurement_date": row["measurement_date"], 
-         "weight": row["weight"], "notes": row["notes"]} 
+        {
+            "name": row["name"],
+            "measurement_date": row["measurement_date"],
+            "weight": row["weight"],
+            "notes": row["notes"],
+        }
         for row in rows
     ]
 
-    
     logger.info(f"Fetched measurements: {measurements}")
-        # return jsonify(measurements)
+    # return jsonify(measurements)
     return {"measurements": measurements}
 
 
@@ -110,12 +120,12 @@ async def get_measurements():
 
 #     # Record metrics
 #     REQUEST_COUNT.labels(
-#         method=request.method, 
-#         endpoint=request.url.path, 
+#         method=request.method,
+#         endpoint=request.url.path,
 #         http_status=response.status_code
 #     ).inc()
 #     REQUEST_LATENCY.labels(
-#         method=request.method, 
+#         method=request.method,
 #         endpoint=request.url.path
 #     ).observe(process_time)
 
@@ -126,12 +136,15 @@ async def get_measurements():
 # def get_metrics():
 #     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
+
 # Endpoint: Add a new measurement
 @app.post("/measurements")
 async def add_measurement(measurement: Measurement):
     try:
         # Parse measurement_date into a datetime.date object
-        measurement_date = datetime.strptime(measurement.measurement_date, "%Y-%m-%d").date()
+        measurement_date = datetime.strptime(
+            measurement.measurement_date, "%Y-%m-%d"
+        ).date()
 
         insert_query = """
             INSERT INTO weight_measurements (user_id, measurement_date, weight, notes) 
@@ -143,7 +156,7 @@ async def add_measurement(measurement: Measurement):
                 measurement.user_id,
                 measurement_date,  # Use the parsed date
                 measurement.weight,
-                measurement.notes
+                measurement.notes,
             )
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error adding measurement: {e}")

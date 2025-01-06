@@ -1,3 +1,6 @@
+"""
+weight tracker app
+"""
 import os
 import logging
 import datetime

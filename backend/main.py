@@ -114,7 +114,7 @@ async def get_measurements():
 async def add_measurement(measurement: Measurement):
     try:
         # Parse measurement_date into a datetime.date object
-        measurement_date = datetime.strptime(
+        measurement_date = datetime.datetime.strptime(
             measurement.measurement_date, "%Y-%m-%d"
         ).date()
 
@@ -131,8 +131,7 @@ async def add_measurement(measurement: Measurement):
                 measurement.notes,
             )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error adding measurement: {e}")
-
+        raise HTTPException(status_code=400, detail=f"Error adding measurement: {e}") from e
     logger.info("Fetched measurements %s", insert_query)
 
     return {"message": "Measurement added successfully"}

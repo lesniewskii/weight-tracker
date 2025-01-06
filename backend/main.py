@@ -64,8 +64,10 @@ async def shutdown():
     await app.state.db_pool.close()
 
 
-# Pydantic model for adding a measurement
 class Measurement(BaseModel):
+    """
+    Pydantic model for adding a measurement
+    """
     user_id: int
     measurement_date: str
     weight: float
@@ -74,6 +76,9 @@ class Measurement(BaseModel):
 
 @app.get("/")
 def read_root():
+    """
+    root path of the backend with some greetins
+    """
     return {"message": "Hello, World!!!"}
 
 
@@ -81,12 +86,17 @@ def read_root():
     "/health", summary="Health Check", response_description="Application Health Status"
 )
 async def health_check():
+    """
+    healthz check
+    """
     return JSONResponse(content={"status": "healthy"}, status_code=200)
 
 
-# Endpoint: Get all measurements
 @app.get("/measurements")
 async def get_measurements():
+    """
+    Endpoint: Get all measurements
+    """
     query = """
         SELECT u.name, w.measurement_date, w.weight, w.notes 
         FROM weight_measurements w 
@@ -109,9 +119,11 @@ async def get_measurements():
     return {"measurements": measurements}
 
 
-# Endpoint: Add a new measurement
 @app.post("/measurements")
 async def add_measurement(measurement: Measurement):
+    """
+    Endpoint: Add a new measurement
+    """
     try:
         # Parse measurement_date into a datetime.date object
         measurement_date = datetime.datetime.strptime(

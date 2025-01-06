@@ -8,18 +8,6 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from asyncpg import create_pool
 
-# REQUEST_COUNT = Counter(
-#     "http_requests_total",
-#     "Total number of HTTP requests",
-#     ["method", "endpoint", "http_status"]
-# )
-
-# REQUEST_LATENCY = Histogram(
-#     "http_request_latency_seconds",
-#     "Latency of HTTP requests in seconds",
-#     ["method", "endpoint"]
-# )
-
 app = FastAPI()
 
 logger = logging.getLogger(__name__)
@@ -56,6 +44,11 @@ app.add_middleware(
 # Initialize the database connection pool
 @app.on_event("startup")
 async def startup():
+    """
+    Initializes resources during the application startup phase.
+
+    Creates a database connection pool and attaches it to the application state.
+    """
     app.state.db_pool = await create_pool(
         host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASSWORD, port=DB_PORT
     )
@@ -63,6 +56,11 @@ async def startup():
 
 @app.on_event("shutdown")
 async def shutdown():
+    """
+    Cleans up resources during the application shutdown phase.
+
+    Closes the database connection pool.
+    """
     await app.state.db_pool.close()
 
 
@@ -109,31 +107,6 @@ async def get_measurements():
     logger.info("Fetched measurements: %s", measurements)
     # return jsonify(measurements)
     return {"measurements": measurements}
-
-
-# @app.middleware("http")
-# async def add_prometheus_metrics(request: Request, call_next):
-#     start_time = time.time()
-#     response = await call_next(request)
-#     process_time = time.time() - start_time
-
-#     # Record metrics
-#     REQUEST_COUNT.labels(
-#         method=request.method,
-#         endpoint=request.url.path,
-#         http_status=response.status_code
-#     ).inc()
-#     REQUEST_LATENCY.labels(
-#         method=request.method,
-#         endpoint=request.url.path
-#     ).observe(process_time)
-
-#     return response
-
-# Expose metrics endpoint
-# @app.get("/metrics")
-# def get_metrics():
-#     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 # Endpoint: Add a new measurement

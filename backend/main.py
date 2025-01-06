@@ -106,7 +106,6 @@ async def get_measurements():
         }
         for row in rows
     ]
-    
     logger.info(f"Fetched measurements: {measurements}")
     # return jsonify(measurements)
     return {"measurements": measurements}

@@ -1,12 +1,12 @@
 import os
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from datetime import datetime
-from asyncpg import create_pool
-from fastapi.responses import JSONResponse
-
 import logging
+import datetime
+
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+from asyncpg import create_pool
 
 # REQUEST_COUNT = Counter(
 #     "http_requests_total",
@@ -106,7 +106,7 @@ async def get_measurements():
         }
         for row in rows
     ]
-    logger.info(f"Fetched measurements: {measurements}")
+    logger.info("Fetched measurements: %s", measurements)
     # return jsonify(measurements)
     return {"measurements": measurements}
 
@@ -160,6 +160,6 @@ async def add_measurement(measurement: Measurement):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error adding measurement: {e}")
 
-    logger.info(f"Fetched measurements: {insert_query}")
+    logger.info("Fetched measurements %s", insert_query)
 
     return {"message": "Measurement added successfully"}

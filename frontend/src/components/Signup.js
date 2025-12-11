@@ -9,11 +9,12 @@ const Signup = ({ onSignup }) => {
     const [height, setHeight] = useState('');
     const [age, setAge] = useState('');
     const [error, setError] = useState('');
+    const backendApiUrl = process.env.REACT_APP_BACKEND_API_URL || 'http://localhost:8000';
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:8000/auth/register', {
+            await axios.post(`${backendApiUrl}/auth/register`, {
                 username,
                 password,
                 email,

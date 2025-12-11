@@ -41,6 +41,9 @@ async def get_trends(current_user: dict = Depends(get_current_user)):
             WHERE user_id = $1 ORDER BY measurement_date
         """, current_user["id"])
 
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
     if not measurements:
         return {"trends": {}}
 

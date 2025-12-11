@@ -1,10 +1,11 @@
 from fastapi import APIRouter, HTTPException, Depends
+from fastapi.security import OAuth2PasswordBearer
 from models import UserCreate, UserLogin, UserResponse
 from database import database
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
-from asyncpg.exceptions import IntegrityConstraintViolationError
+from asyncpg.exceptions import IntegrityConstraintViolationError, UniqueViolationError
 import os
 
 router = APIRouter()
@@ -13,6 +14,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -30,7 +32,7 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-async def get_current_user(token: str):
+async def get_current_user(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
         status_code=401,
         detail="Could not validate credentials",
@@ -62,11 +64,13 @@ async def register(user: UserCreate):
         async with database.pool.acquire() as connection:
             row = await connection.fetchrow(query, user.username, hashed_password, user.email, user.height, user.age)
         return dict(row)
-    except IntegrityConstraintViolationError as e:
+    except (IntegrityConstraintViolationError, UniqueViolationError) as e:
+        detail = "User registration failed"
         if "users_email_key" in str(e):
-            raise HTTPException(status_code=400, detail="Email already registered")
-        else:
-            raise HTTPException(status_code=400, detail=f"User registration failed: {e}")
+            detail = "Email already registered"
+        elif "users_username_key" in str(e):
+            detail = "Username already registered"
+        raise HTTPException(status_code=400, detail=detail)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"User registration failed: {e}")
 

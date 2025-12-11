@@ -6,11 +6,12 @@ const Login = ({ onLogin }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const backendApiUrl = process.env.REACT_APP_BACKEND_API_URL || 'http://localhost:8000';
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://localhost:8000/auth/login', { username, password });
+            const response = await axios.post(`${backendApiUrl}/auth/login`, { username, password });
             localStorage.setItem('token', response.data.access_token);
             onLogin();
         } catch (err) {

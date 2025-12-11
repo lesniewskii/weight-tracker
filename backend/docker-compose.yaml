@@ -1,7 +1,7 @@
-version: '3.9'
+version: "3.9"
 
 services:
-  web:
+  backend:
     build: .
     ports:
       - "8000:8000"
@@ -11,8 +11,12 @@ services:
       DB_USER: myuser
       DB_PASSWORD: mypassword
       DB_PORT: 5432
+      CORS_ALLOW_ORIGINS: http://localhost:3000
+      SECRET_KEY: changeme-in-prod
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+
   db:
     image: postgres
     container_name: my-postgres
@@ -23,9 +27,13 @@ services:
       POSTGRES_PASSWORD: mypassword
       POSTGRES_DB: weight_tracker
     volumes:
-      # Uncomment if you want to use named volume
       - postgres_data:/var/lib/postgresql/data
-      - ${REPO_PATH}:/docker-entrypoint-initdb.d/init.sql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myuser -d weight_tracker"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:

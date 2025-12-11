@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   backend:
     build:
@@ -13,7 +15,8 @@ services:
       DB_USER: myuser
       DB_PASSWORD: mypassword
       DB_PORT: 5432
-      CORS_ALLOW_ORIGINS: http://localhost:3000
+      CORS_ALLOW_ORIGINS: http://localhost:3000,http://frontend
+      SECRET_KEY: changeme-in-prod
     depends_on:
       db:
         condition: service_healthy
@@ -23,15 +26,18 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        REACT_APP_BACKEND_API_URL: http://localhost:8000
+        REACT_APP_BACKEND_API_URL: http://backend:8000
     ports:
       - "3000:80"
     deploy:
       replicas: 1
+    depends_on:
+      - backend
 
   db:
-    image: postgres
+    image: postgres:16-alpine
     container_name: my-postgres
+    restart: unless-stopped
     ports:
       - "5432:5432"
     environment:
@@ -39,7 +45,7 @@ services:
       POSTGRES_PASSWORD: mypassword
       POSTGRES_DB: weight_tracker
     volumes:
-      - postgres_data:/var/lib/postgresql
+      - postgres_data:/var/lib/postgresql/data
       - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U myuser -d weight_tracker"]

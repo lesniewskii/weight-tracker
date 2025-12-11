@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { Paper, Typography, TextField, Button, Box, Alert, List, ListItem, ListItemText, Divider, Switch, FormControlLabel } from '@mui/material';
 
@@ -14,11 +14,7 @@ const Goals = () => {
 
     const backendApiUrl = process.env.REACT_APP_BACKEND_API_URL || 'http://localhost:8000';
 
-    useEffect(() => {
-        fetchGoals();
-    }, []);
-
-    const fetchGoals = async () => {
+    const fetchGoals = useCallback(async () => {
         const token = localStorage.getItem('token');
         try {
             const response = await axios.get(`${backendApiUrl}/goals`, {
@@ -28,7 +24,11 @@ const Goals = () => {
         } catch (err) {
             setError('Failed to load goals');
         }
-    };
+    }, [backendApiUrl]);
+
+    useEffect(() => {
+        fetchGoals();
+    }, [fetchGoals]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();

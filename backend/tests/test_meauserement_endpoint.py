@@ -41,7 +41,6 @@ async def test_get_measurements():
 async def test_add_measurement():
     from models import Measurement
     mock_measurement = Measurement(
-        user_id=1,
         measurement_date='2023-01-15',
         weight=75.5,
         notes='Weekly check-in'
@@ -72,7 +71,6 @@ async def test_add_measurement():
 async def test_add_measurement_invalid_date():
     from models import Measurement
     mock_measurement = Measurement(
-        user_id=1,
         measurement_date='invalid-date',
         weight=75.5,
         notes='Weekly check-in'

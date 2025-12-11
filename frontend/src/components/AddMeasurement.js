@@ -3,7 +3,6 @@ import axios from 'axios';
 import { Paper, Typography, TextField, Button, Box, Alert } from '@mui/material';
 
 const AddMeasurement = ({ onAdd }) => {
-    const [userId, setUserId] = useState('');
     const [measurementDate, setMeasurementDate] = useState('');
     const [weight, setWeight] = useState('');
     const [notes, setNotes] = useState('');
@@ -17,16 +16,17 @@ const AddMeasurement = ({ onAdd }) => {
         setLoading(true);
         setError('');
         const newMeasurement = {
-            user_id: parseInt(userId),
             measurement_date: measurementDate,
             weight: parseFloat(weight),
             notes
         };
 
+        const token = localStorage.getItem('token');
         try {
-            await axios.post(`${backendApiUrl}/measurements`, newMeasurement);
+            await axios.post(`${backendApiUrl}/measurements`, newMeasurement, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             onAdd(); // Refresh measurements after adding
-            setUserId('');
             setMeasurementDate('');
             setWeight('');
             setNotes('');
@@ -45,14 +45,6 @@ const AddMeasurement = ({ onAdd }) => {
             </Typography>
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
             <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <TextField
-                    label="User ID"
-                    type="number"
-                    value={userId}
-                    onChange={(e) => setUserId(e.target.value)}
-                    required
-                    fullWidth
-                />
                 <TextField
                     label="Measurement Date"
                     type="date"

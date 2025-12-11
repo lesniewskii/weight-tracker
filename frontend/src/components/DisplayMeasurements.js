@@ -11,7 +11,10 @@ const DisplayMeasurements = ({ refresh }) => {
         const fetchData = () => {
             setLoading(true);
             const backendApiUrl = process.env.REACT_APP_BACKEND_API_URL || 'http://localhost:8000';
-            axios.get(`${backendApiUrl}/measurements`)
+            const token = localStorage.getItem('token');
+            axios.get(`${backendApiUrl}/measurements`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
                 .then(response => {
                     setMeasurements(response.data.measurements || []);
                     setError(null);
@@ -45,16 +48,14 @@ const DisplayMeasurements = ({ refresh }) => {
                     <Table>
                         <TableHead>
                             <TableRow>
-                                <TableCell>User</TableCell>
                                 <TableCell>Date</TableCell>
                                 <TableCell>Weight (kg)</TableCell>
                                 <TableCell>Notes</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {measurements.map((measurement, index) => (
-                                <TableRow key={index}>
-                                    <TableCell>{measurement.name}</TableCell>
+                            {measurements.map((measurement) => (
+                                <TableRow key={measurement.id}>
                                     <TableCell>{measurement.measurement_date}</TableCell>
                                     <TableCell>{measurement.weight}</TableCell>
                                     <TableCell>{measurement.notes}</TableCell>

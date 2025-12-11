@@ -1,3 +1,4 @@
+import asyncio
 import os
 from asyncpg import create_pool
 
@@ -13,9 +14,21 @@ class Database:
         self.pool = None
 
     async def connect(self):
-        self.pool = await create_pool(
-            host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASSWORD, port=DB_PORT
-        )
+        retry_attempts = 5
+        for attempt in range(1, retry_attempts + 1):
+            try:
+                self.pool = await create_pool(
+                    host=DB_HOST,
+                    database=DB_NAME,
+                    user=DB_USER,
+                    password=DB_PASSWORD,
+                    port=DB_PORT,
+                )
+                return
+            except Exception:
+                if attempt == retry_attempts:
+                    raise
+                await asyncio.sleep(2)
 
     async def disconnect(self):
         if self.pool:

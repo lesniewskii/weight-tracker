@@ -1,57 +1,70 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert, CircularProgress, Box } from '@mui/material';
 
 const DisplayMeasurements = ({ refresh }) => {
     const [measurements, setMeasurements] = useState([]);
     const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchData = () => {
-            const backendApiUrl = process.env.REACT_APP_BACKEND_API_URL;
-            console.log('Backend URL:', backendApiUrl)
+            setLoading(true);
+            const backendApiUrl = process.env.REACT_APP_BACKEND_API_URL || 'http://localhost:8000';
             axios.get(`${backendApiUrl}/measurements`)
                 .then(response => {
-                    console.log('Response data:', response.data);
                     setMeasurements(response.data.measurements || []);
+                    setError(null);
                 })
                 .catch(error => {
                     console.error('Error fetching data:', error);
                     setError('Failed to load data');
+                })
+                .finally(() => {
+                    setLoading(false);
                 });
         };
 
-        fetchData();  // Fetch the data on initial mount or when `refresh` changes
-    }, [refresh]);  // Re-fetch when `refresh` changes
+        fetchData();
+    }, [refresh]);
 
     return (
-        <div>
-            <h2>Weight Measurements</h2>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
-            {measurements.length === 0 ? (
-                <p>No measurements found.</p>
+        <Paper sx={{ p: 3 }}>
+            <Typography variant="h5" gutterBottom>
+                Weight Measurements
+            </Typography>
+            {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+            {loading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                    <CircularProgress />
+                </Box>
+            ) : measurements.length === 0 ? (
+                <Typography>No measurements found.</Typography>
             ) : (
-                <table border="1">
-                    <thead>
-                        <tr>
-                            <th>User</th>
-                            <th>Date</th>
-                            <th>Weight (kg)</th>
-                            <th>Notes</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {measurements.map((measurement, index) => (
-                            <tr key={index}>
-                                <td>{measurement.name}</td>
-                                <td>{measurement.measurement_date}</td>
-                                <td>{measurement.weight}</td>
-                                <td>{measurement.notes}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                <TableContainer>
+                    <Table>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>User</TableCell>
+                                <TableCell>Date</TableCell>
+                                <TableCell>Weight (kg)</TableCell>
+                                <TableCell>Notes</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {measurements.map((measurement, index) => (
+                                <TableRow key={index}>
+                                    <TableCell>{measurement.name}</TableCell>
+                                    <TableCell>{measurement.measurement_date}</TableCell>
+                                    <TableCell>{measurement.weight}</TableCell>
+                                    <TableCell>{measurement.notes}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
             )}
-        </div>
+        </Paper>
     );
 };
 

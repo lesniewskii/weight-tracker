@@ -5,7 +5,7 @@ A full-stack web application for tracking weight measurements, built with FastAP
 ## Features
 
 - User registration and authentication
-- Add, view, and track weight measurements
+- Add, view, edit, and delete weight measurements
 - Set and manage weight goals with visual progress tracking
 - Interactive weight trend charts with goal reference lines
 - Weight change analysis showing progress between measurements
@@ -105,6 +105,24 @@ curl -X POST http://localhost:8000/measurements \
     "weight": 70.5,
     "notes": "Morning weight"
   }'
+```
+
+#### Update a measurement
+```bash
+curl -X PUT http://localhost:8000/measurements/1 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{
+    "measurement_date": "2024-12-13",
+    "weight": 71.0,
+    "notes": "Updated weight"
+  }'
+```
+
+#### Delete a measurement
+```bash
+curl -X DELETE http://localhost:8000/measurements/1 \
+  -H "Authorization: Bearer <token>"
 ```
 
 #### Get trends

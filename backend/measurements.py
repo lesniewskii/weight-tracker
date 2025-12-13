@@ -47,7 +47,7 @@ async def get_trends(current_user: dict = Depends(get_current_user)):
     if not measurements:
         return {"trends": {}}
 
-    weights = [m["weight"] for m in measurements]
+    weights = [float(m["weight"]) for m in measurements]
     dates = [m["measurement_date"] for m in measurements]
 
     # Calculate averages
@@ -59,7 +59,8 @@ async def get_trends(current_user: dict = Depends(get_current_user)):
     bmi = None
     if user["height"]:
         latest_weight = weights[-1]
-        bmi = latest_weight / ((user["height"] / 100) ** 2)
+        height_m = float(user["height"]) / 100
+        bmi = latest_weight / (height_m ** 2)
 
     # Trend: simple linear regression slope
     if len(weights) > 1:
@@ -159,3 +160,53 @@ async def add_measurement(measurement: Measurement, current_user: dict = Depends
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error adding measurement: {e}")
     return {"message": "Measurement added successfully"}
+
+@router.put("/measurements/{measurement_id}")
+async def update_measurement(measurement_id: int, measurement: Measurement, current_user: dict = Depends(get_current_user)):
+    try:
+        measurement_date = datetime.datetime.strptime(
+            measurement.measurement_date, "%Y-%m-%d"
+        ).date()
+
+        query = """
+            UPDATE weight_measurements
+            SET measurement_date = $1, weight = $2, notes = $3
+            WHERE id = $4 AND user_id = $5;
+        """
+        async with database.pool.acquire() as connection:
+            result = await connection.execute(
+                query,
+                measurement_date,
+                measurement.weight,
+                measurement.notes,
+                measurement_id,
+                current_user["id"],
+            )
+            if result == "UPDATE 0":
+                raise HTTPException(status_code=404, detail="Measurement not found or not owned by user")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error updating measurement: {e}")
+    return {"message": "Measurement updated successfully"}
+
+@router.delete("/measurements/{measurement_id}")
+async def delete_measurement(measurement_id: int, current_user: dict = Depends(get_current_user)):
+    try:
+        query = """
+            DELETE FROM weight_measurements
+            WHERE id = $1 AND user_id = $2;
+        """
+        async with database.pool.acquire() as connection:
+            result = await connection.execute(
+                query,
+                measurement_id,
+                current_user["id"],
+            )
+            if result == "DELETE 0":
+                raise HTTPException(status_code=404, detail="Measurement not found or not owned by user")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error deleting measurement: {e}")
+    return {"message": "Measurement deleted successfully"}

@@ -94,3 +94,21 @@ async def login(user: UserLogin):
 @router.get("/me", response_model=UserResponse)
 async def read_users_me(current_user: dict = Depends(get_current_user)):
     return current_user
+
+@router.put("/me", response_model=UserResponse)
+async def update_user_profile(user_update: UserCreate, current_user: dict = Depends(get_current_user)):
+    # Update user profile (excluding password for now)
+    query = """
+        UPDATE users
+        SET email = $1, height = $2, age = $3
+        WHERE id = $4
+        RETURNING id, username, email, height, age
+    """
+    try:
+        async with database.pool.acquire() as connection:
+            row = await connection.fetchrow(query, user_update.email, user_update.height, user_update.age, current_user["id"])
+            if row is None:
+                raise HTTPException(status_code=404, detail="User not found")
+        return dict(row)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Profile update failed: {e}")

@@ -5,13 +5,14 @@ A full-stack web application for tracking weight measurements, built with FastAP
 ## Features
 
 - User registration and authentication
+- User profile management (update email, height, age)
 - Add, view, edit, and delete weight measurements
 - Set and manage weight goals with visual progress tracking
 - Interactive weight trend charts with goal reference lines
 - Weight change analysis showing progress between measurements
 - View detailed weight statistics and BMI calculations
 - Export/import weight data as CSV
-- Responsive web interface
+- Responsive web interface with mobile navigation
 
 ## Tech Stack
 
@@ -77,6 +78,26 @@ curl -X POST http://localhost:8000/auth/login \
   -d '{
     "username": "johndoe",
     "password": "password"
+  }'
+```
+
+#### Get user profile
+```bash
+curl -X GET http://localhost:8000/auth/me \
+  -H "Authorization: Bearer <token>"
+```
+
+#### Update user profile
+```bash
+curl -X PUT http://localhost:8000/auth/me \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{
+    "username": "current_username",
+    "password": "dummy",
+    "email": "newemail@example.com",
+    "height": 175,
+    "age": 30
   }'
 ```
 

@@ -8,12 +8,18 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import BottomNavigation from '@mui/material/BottomNavigation';
+import BottomNavigationAction from '@mui/material/BottomNavigationAction';
+import Paper from '@mui/material/Paper';
 import DisplayMeasurements from '../src/components/DisplayMeasurements';
 import AddMeasurement from '../src/components/AddMeasurement';
 import WeightChart from '../src/components/WeightChart';
 import Goals from '../src/components/Goals';
+import Profile from '../src/components/Profile';
 import Login from '../src/components/Login';
 import Signup from '../src/components/Signup';
+import HomeIcon from '@mui/icons-material/Home';
+import PersonIcon from '@mui/icons-material/Person';
 
 const theme = createTheme({
     palette: {
@@ -30,6 +36,7 @@ function App() {
     const [refresh, setRefresh] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [tabValue, setTabValue] = useState(0);
+    const [navValue, setNavValue] = useState(0);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -49,6 +56,7 @@ function App() {
     const handleLogout = () => {
         localStorage.removeItem('token');
         setIsLoggedIn(false);
+        setNavValue(0); // Reset navigation
     };
 
     // Trigger a refresh for the DisplayMeasurements component
@@ -80,26 +88,46 @@ function App() {
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />
-            <Container maxWidth="lg" sx={{ py: 4 }}>
-                <Box display="flex" justifyContent="space-between" alignItems="center">
-                    <Typography variant="h3" component="h1" gutterBottom>
-                        Weight Tracker
-                    </Typography>
-                    <Button variant="outlined" onClick={handleLogout}>
-                        Logout
-                    </Button>
-                </Box>
-                <Grid container spacing={4}>
-                    <Grid item xs={12} md={4}>
-                        <AddMeasurement onAdd={handleAddMeasurement} />
-                        <Goals />
-                    </Grid>
-                    <Grid item xs={12} md={8}>
-                        <WeightChart refresh={refresh} />
-                        <DisplayMeasurements refresh={refresh} />
-                    </Grid>
-                </Grid>
-            </Container>
+            <Box sx={{ pb: 7 }}>
+                <Container maxWidth="lg" sx={{ py: 4 }}>
+                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                        <Typography variant="h3" component="h1">
+                            Weight Tracker
+                        </Typography>
+                        <Button variant="outlined" onClick={handleLogout}>
+                            Logout
+                        </Button>
+                    </Box>
+
+                    {navValue === 0 && (
+                        <Grid container spacing={4}>
+                            <Grid item xs={12} md={4}>
+                                <AddMeasurement onAdd={handleAddMeasurement} />
+                                <Goals />
+                            </Grid>
+                            <Grid item xs={12} md={8}>
+                                <WeightChart refresh={refresh} />
+                                <DisplayMeasurements refresh={refresh} />
+                            </Grid>
+                        </Grid>
+                    )}
+
+                    {navValue === 1 && <Profile />}
+                </Container>
+
+                <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0 }} elevation={3}>
+                    <BottomNavigation
+                        showLabels
+                        value={navValue}
+                        onChange={(event, newValue) => {
+                            setNavValue(newValue);
+                        }}
+                    >
+                        <BottomNavigationAction label="Dashboard" icon={<HomeIcon />} />
+                        <BottomNavigationAction label="Profile" icon={<PersonIcon />} />
+                    </BottomNavigation>
+                </Paper>
+            </Box>
         </ThemeProvider>
     );
 }

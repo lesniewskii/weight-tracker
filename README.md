@@ -8,6 +8,7 @@ A full-stack web application for tracking weight measurements, built with FastAP
 - Add, view, and track weight measurements
 - Set and manage weight goals with visual progress tracking
 - Interactive weight trend charts with goal reference lines
+- Weight change analysis showing progress between measurements
 - View detailed weight statistics and BMI calculations
 - Export/import weight data as CSV
 - Responsive web interface
@@ -160,7 +161,7 @@ The backend is built with FastAPI and uses:
 The frontend is a React application using:
 - Material-UI for components
 - Axios for API calls
-- Recharts for interactive data visualization (weight trends, goal tracking)
+- Recharts for interactive data visualization (weight trends, goal tracking, change analysis)
 
 ### Database Schema
 

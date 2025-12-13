@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, BarChart, Bar } from 'recharts';
 import axios from 'axios';
 import { Paper, Typography, Grid, Box } from '@mui/material';
 
 const WeightChart = ({ refresh }) => {
     const [data, setData] = useState([]);
+    const [changeData, setChangeData] = useState([]);
     const [trends, setTrends] = useState({});
     const [goals, setGoals] = useState([]);
 
@@ -19,14 +20,30 @@ const WeightChart = ({ refresh }) => {
             })
                 .then(response => {
                     const measurements = response.data.measurements || [];
-                    // Sort by date and format for chart
-                    const sortedData = measurements
-                        .sort((a, b) => new Date(a.measurement_date) - new Date(b.measurement_date))
-                        .map(m => ({
-                            date: new Date(m.measurement_date).toLocaleDateString(),
-                            weight: m.weight
-                        }));
-                    setData(sortedData);
+                    // Sort by date
+                    const sortedMeasurements = measurements
+                        .sort((a, b) => new Date(a.measurement_date) - new Date(b.measurement_date));
+
+                    // Format for weight chart
+                    const chartData = sortedMeasurements.map(m => ({
+                        date: new Date(m.measurement_date).toLocaleDateString(),
+                        weight: m.weight
+                    }));
+                    setData(chartData);
+
+                    // Calculate weight changes for change chart
+                    const changes = [];
+                    for (let i = 1; i < sortedMeasurements.length; i++) {
+                        const prev = sortedMeasurements[i - 1];
+                        const curr = sortedMeasurements[i];
+                        const change = curr.weight - prev.weight;
+                        changes.push({
+                            date: new Date(curr.measurement_date).toLocaleDateString(),
+                            change: parseFloat(change.toFixed(2)),
+                            period: `${new Date(prev.measurement_date).toLocaleDateString()} to ${new Date(curr.measurement_date).toLocaleDateString()}`
+                        });
+                    }
+                    setChangeData(changes);
                 })
                 .catch(error => {
                     console.error('Error fetching data for chart:', error);
@@ -65,25 +82,53 @@ const WeightChart = ({ refresh }) => {
             </Typography>
             <Grid container spacing={2}>
                 <Grid item xs={12} md={8}>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <LineChart data={data}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="date" />
-                            <YAxis />
-                            <Tooltip />
-                            <Legend />
-                            <Line type="monotone" dataKey="weight" stroke="#8884d8" activeDot={{ r: 8 }} />
-                            {goals.map((goal, index) => (
-                                <ReferenceLine
-                                    key={goal.id}
-                                    y={goal.target_weight}
-                                    stroke="#ff7300"
-                                    strokeDasharray="5 5"
-                                    label={{ value: `Goal: ${goal.target_weight}kg`, position: "topRight" }}
+                    <Box sx={{ mb: 4 }}>
+                        <Typography variant="h6" gutterBottom>
+                            Weight Over Time
+                        </Typography>
+                        <ResponsiveContainer width="100%" height={250}>
+                            <LineChart data={data}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="date" />
+                                <YAxis />
+                                <Tooltip />
+                                <Legend />
+                                <Line type="monotone" dataKey="weight" stroke="#8884d8" activeDot={{ r: 8 }} />
+                                {goals.map((goal, index) => (
+                                    <ReferenceLine
+                                        key={goal.id}
+                                        y={goal.target_weight}
+                                        stroke="#ff7300"
+                                        strokeDasharray="5 5"
+                                        label={{ value: `Goal: ${goal.target_weight}kg`, position: "topRight" }}
+                                    />
+                                ))}
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </Box>
+
+                    <Box>
+                        <Typography variant="h6" gutterBottom>
+                            Weight Change Between Measurements
+                        </Typography>
+                        <ResponsiveContainer width="100%" height={200}>
+                            <BarChart data={changeData}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="date" />
+                                <YAxis />
+                                <Tooltip
+                                    formatter={(value, name) => [value + ' kg', 'Weight Change']}
+                                    labelFormatter={(label) => `Period: ${changeData.find(d => d.date === label)?.period || label}`}
                                 />
-                            ))}
-                        </LineChart>
-                    </ResponsiveContainer>
+                                <Legend />
+                                <Bar
+                                    dataKey="change"
+                                    fill="#8884d8"
+                                    name="Weight Change"
+                                />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </Box>
                 </Grid>
                 <Grid item xs={12} md={4}>
                     <Box>

@@ -12,7 +12,7 @@ const Goals = () => {
     const [importFile, setImportFile] = useState(null);
     const [reminderEnabled, setReminderEnabled] = useState(false);
 
-    const backendApiUrl = process.env.REACT_APP_BACKEND_API_URL || 'http://localhost:8000';
+    const backendApiUrl = process.env.REACT_APP_BACKEND_API_URL || 'http://backend:8000';
 
     const fetchGoals = useCallback(async () => {
         const token = localStorage.getItem('token');

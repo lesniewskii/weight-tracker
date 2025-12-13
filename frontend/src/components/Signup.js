@@ -9,21 +9,29 @@ const Signup = ({ onSignup }) => {
     const [height, setHeight] = useState('');
     const [age, setAge] = useState('');
     const [error, setError] = useState('');
-    const backendApiUrl = process.env.REACT_APP_BACKEND_API_URL || 'http://localhost:8000';
+    const [success, setSuccess] = useState('');
+    const backendApiUrl = process.env.REACT_APP_BACKEND_API_URL || 'http://backend:8000';
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
+        setSuccess('');
+        const data = {
+            username,
+            password,
+            email,
+            height: height ? parseFloat(height) : null,
+            age: age ? parseInt(age) : null
+        };
+        console.log('Sending registration request to:', `${backendApiUrl}/auth/register`, 'with data:', data);
         try {
-            await axios.post(`${backendApiUrl}/auth/register`, {
-                username,
-                password,
-                email,
-                height: height ? parseFloat(height) : null,
-                age: age ? parseInt(age) : null
-            });
-            onSignup();
+            const response = await axios.post(`${backendApiUrl}/auth/register`, data);
+            console.log('Registration response:', response.data);
+            setSuccess('Registration successful! Please log in.');
+            setTimeout(() => onSignup(), 2000); // Switch to login after 2 seconds
         } catch (err) {
-            setError('Registration failed');
+            console.error('Registration error:', err.response?.data || err.message);
+            setError(err.response?.data?.detail || 'Registration failed');
         }
     };
 
@@ -33,6 +41,7 @@ const Signup = ({ onSignup }) => {
                 Sign Up
             </Typography>
             {error && <Alert severity="error">{error}</Alert>}
+            {success && <Alert severity="success">{success}</Alert>}
             <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
                 <TextField
                     fullWidth

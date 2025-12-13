@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS goals (
 
 -- Seed a demo user and measurement if they are missing
 INSERT INTO users (username, password_hash, email, height, age)
-SELECT 'johndoe', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4fYwKjQXW', 'john@example.com', 175.0, 30
+SELECT 'johndoe', '$2b$12$mcHG8wpkKfssUh.67.U5sOnbhE827gW6hs8KmiS/1VNBZ8gRUNnx.', 'john@example.com', 175.0, 30
 WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'johndoe');
 
 INSERT INTO weight_measurements (user_id, measurement_date, weight, notes)

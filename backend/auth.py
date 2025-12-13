@@ -54,6 +54,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 
 @router.post("/register", response_model=UserResponse)
 async def register(user: UserCreate):
+    print(f"Registration attempt for username: {user.username}, email: {user.email}")
     hashed_password = get_password_hash(user.password)
     query = """
         INSERT INTO users (username, password_hash, email, height, age)
@@ -63,6 +64,7 @@ async def register(user: UserCreate):
     try:
         async with database.pool.acquire() as connection:
             row = await connection.fetchrow(query, user.username, hashed_password, user.email, user.height, user.age)
+        print(f"Registration successful for user: {user.username}")
         return dict(row)
     except (IntegrityConstraintViolationError, UniqueViolationError) as e:
         detail = "User registration failed"
@@ -70,8 +72,10 @@ async def register(user: UserCreate):
             detail = "Email already registered"
         elif "users_username_key" in str(e):
             detail = "Username already registered"
+        print(f"Registration failed for {user.username}: {detail}")
         raise HTTPException(status_code=400, detail=detail)
     except Exception as e:
+        print(f"Unexpected error during registration for {user.username}: {e}")
         raise HTTPException(status_code=400, detail=f"User registration failed: {e}")
 
 @router.post("/login")

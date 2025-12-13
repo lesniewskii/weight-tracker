@@ -10,7 +10,7 @@ const DisplayMeasurements = ({ refresh }) => {
     useEffect(() => {
         const fetchData = () => {
             setLoading(true);
-            const backendApiUrl = process.env.REACT_APP_BACKEND_API_URL || 'http://localhost:8000';
+            const backendApiUrl = process.env.REACT_APP_BACKEND_API_URL || 'http://backend:8000';
             const token = localStorage.getItem('token');
             axios.get(`${backendApiUrl}/measurements`, {
                 headers: { Authorization: `Bearer ${token}` }

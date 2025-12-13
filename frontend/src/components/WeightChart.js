@@ -1,16 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 import axios from 'axios';
 import { Paper, Typography, Grid, Box } from '@mui/material';
 
 const WeightChart = ({ refresh }) => {
     const [data, setData] = useState([]);
     const [trends, setTrends] = useState({});
+    const [goals, setGoals] = useState([]);
 
     useEffect(() => {
         const fetchData = () => {
-            const backendApiUrl = process.env.REACT_APP_BACKEND_API_URL || 'http://localhost:8000';
+            const backendApiUrl = process.env.REACT_APP_BACKEND_API_URL || 'http://backend:8000';
             const token = localStorage.getItem('token');
+
+            // Fetch measurements
             axios.get(`${backendApiUrl}/measurements`, {
                 headers: { Authorization: `Bearer ${token}` }
             })
@@ -29,6 +32,7 @@ const WeightChart = ({ refresh }) => {
                     console.error('Error fetching data for chart:', error);
                 });
 
+            // Fetch trends
             axios.get(`${backendApiUrl}/trends`, {
                 headers: { Authorization: `Bearer ${token}` }
             })
@@ -38,6 +42,17 @@ const WeightChart = ({ refresh }) => {
                 .catch(error => {
                     console.error('Error fetching trends:', error);
                 });
+
+            // Fetch goals
+            axios.get(`${backendApiUrl}/goals`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+                .then(response => {
+                    setGoals(response.data.goals || []);
+                })
+                .catch(error => {
+                    console.error('Error fetching goals:', error);
+                });
         };
 
         fetchData();
@@ -46,7 +61,7 @@ const WeightChart = ({ refresh }) => {
     return (
         <Paper sx={{ p: 2, mb: 4 }}>
             <Typography variant="h5" gutterBottom>
-                Weight Trend & Analysis
+                Weight Trend & Goals
             </Typography>
             <Grid container spacing={2}>
                 <Grid item xs={12} md={8}>
@@ -58,6 +73,15 @@ const WeightChart = ({ refresh }) => {
                             <Tooltip />
                             <Legend />
                             <Line type="monotone" dataKey="weight" stroke="#8884d8" activeDot={{ r: 8 }} />
+                            {goals.map((goal, index) => (
+                                <ReferenceLine
+                                    key={goal.id}
+                                    y={goal.target_weight}
+                                    stroke="#ff7300"
+                                    strokeDasharray="5 5"
+                                    label={{ value: `Goal: ${goal.target_weight}kg`, position: "topRight" }}
+                                />
+                            ))}
                         </LineChart>
                     </ResponsiveContainer>
                 </Grid>
@@ -70,6 +94,16 @@ const WeightChart = ({ refresh }) => {
                         <Typography>Total Measurements: {trends.total_measurements || 0}</Typography>
                         <Typography>Current Streak: {trends.current_streak || 0} days</Typography>
                         <Typography>Date Range: {trends.date_range || 'N/A'}</Typography>
+                        <Typography variant="h6" sx={{ mt: 2 }}>Goals</Typography>
+                        {goals.length > 0 ? (
+                            goals.map(goal => (
+                                <Typography key={goal.id}>
+                                    Target: {goal.target_weight}kg by {goal.target_date}
+                                </Typography>
+                            ))
+                        ) : (
+                            <Typography>No goals set</Typography>
+                        )}
                     </Box>
                 </Grid>
             </Grid>

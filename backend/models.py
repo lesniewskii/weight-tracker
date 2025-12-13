@@ -63,7 +63,6 @@ class GoalCreate(BaseModel):
 
 class GoalResponse(BaseModel):
     id: int
-    user_id: int
     target_weight: float
     target_date: str
     start_weight: float
